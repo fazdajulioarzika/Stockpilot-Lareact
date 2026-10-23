@@ -53,7 +53,7 @@ export default function CategoriesIndex({ categories, filters }: Props) {
 
     function openCreate() {
         setEditing(null);
-        form.reset();
+        form.setData({ name: "" });
         form.clearErrors();
         setFormOpen(true);
     }
