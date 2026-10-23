@@ -3,6 +3,8 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\WarehouseController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +23,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->only(['index', 'store', 'update']);
     Route::patch('products/{product}/toggle-active', [ProductController::class, 'toggleActive'])
         ->name('products.toggle-active');
+
+    Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update']);
+    Route::patch('suppliers/{supplier}/toggle-active', [SupplierController::class, 'toggleActive'])
+        ->name('suppliers.toggle-active');
+
+    Route::resource('warehouses', WarehouseController::class)->only(['index', 'store', 'update']);
+    Route::patch('warehouses/{warehouse}/toggle-active', [WarehouseController::class, 'toggleActive'])
+        ->name('warehouses.toggle-active');
 });
 
 require __DIR__ . '/settings.php';

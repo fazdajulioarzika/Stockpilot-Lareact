@@ -6,6 +6,8 @@ import {
     Ruler,
     Tags,
     Package,
+    Truck,
+    Warehouse,
 } from "lucide-react";
 import AppLogo from "@/components/app-logo";
 import { NavFooter } from "@/components/nav-footer";
@@ -44,6 +46,8 @@ const mainNavItems: NavItem[] = [
         href: "/products",
         icon: Package,
     },
+    { title: "Suppliers", href: "/suppliers", icon: Truck },
+    { title: "Warehouses", href: "/warehouses", icon: Warehouse },
 ];
 
 const footerNavItems: NavItem[] = [
