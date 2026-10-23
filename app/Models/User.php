@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use App\Enums\Role;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property int $id
@@ -40,6 +42,44 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => Role::class,
         ];
+    }
+    public function warehouses(): BelongsToMany
+    {
+        return $this->belongsToMany(Warehouse::class, 'user_warehouses')->withTimestamps();
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === Role::Admin;
+    }
+
+    public function hasRole(Role ...$roles): bool
+    {
+        return in_array($this->role, $roles, true);
+    }
+
+    /** Admin dan Manager melihat semua gudang. Ubah di sini jika kebijakan berubah. */
+    public function hasGlobalWarehouseAccess(): bool
+    {
+        return $this->hasRole(Role::Admin, Role::Manager);
+    }
+
+    /** @return array<int>|null null berarti semua gudang */
+    public function accessibleWarehouseIds(): ?array
+    {
+        if ($this->hasGlobalWarehouseAccess()) {
+            return null;
+        }
+
+        return $this->warehouses()->pluck('warehouses.id')->all();
+    }
+
+    public function canAccessWarehouse(int $warehouseId): bool
+    {
+        $ids = $this->accessibleWarehouseIds();
+
+        return $ids === null || in_array($warehouseId, $ids, true);
     }
 }

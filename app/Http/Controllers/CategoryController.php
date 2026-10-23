@@ -9,9 +9,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
 class CategoryController extends Controller
 {
+    public static function middleware(): array
+    {
+        return [new Middleware('can:manage-master-data', except: ['index'])];
+    }
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
