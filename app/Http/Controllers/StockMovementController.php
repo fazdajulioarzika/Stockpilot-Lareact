@@ -16,6 +16,7 @@ class StockMovementController extends Controller
         'App\Models\GoodsReceipt' => '/goods-receipts',
         'App\Models\StockIssue' => '/stock-issues',
         'App\Models\StockTransfer' => '/transfers',
+        'App\Models\Stocktake' => '/stocktakes',
     ];
 
     public function index(Request $request): Response

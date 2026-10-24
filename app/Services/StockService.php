@@ -9,11 +9,29 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use App\Exceptions\WarehouseLockedException;
+use App\Models\Stocktake;
+use App\Models\Warehouse;
 use InvalidArgumentException;
 use LogicException;
 
 class StockService
 {
+    /**
+     * Tolak jika gudang sedang opname.
+     *
+     * Kunci baca pada baris gudang membuat "mulai opname" (kunci eksklusif) menunggu semua
+     * posting yang sedang berjalan selesai. Posting lain tetap bisa berjalan bersamaan.
+     * Sesudah kunci didapat, status opname dibaca dengan locking read.
+     */
+    private function assertWarehouseOpen(int $warehouseId): void
+    {
+        $code = Warehouse::query()->whereKey($warehouseId)->sharedLock()->value('code');
+
+        if (Stocktake::activeLockFor($warehouseId) !== null) {
+            throw new WarehouseLockedException($code ?? "ID {$warehouseId}");
+        }
+    }
     /**
      * Ubah saldo satu produk di satu gudang dan catat ledger-nya.
      *
@@ -35,7 +53,9 @@ class StockService
         if (bccomp($delta, '0', 3) === 0) {
             throw new InvalidArgumentException('Perubahan stok tidak boleh nol.');
         }
-
+        if ($type !== MovementType::Adjustment) {
+            $this->assertWarehouseOpen($warehouseId);
+        }
         // Buat baris saldo jika belum ada. Aman terhadap request bersamaan
         // karena ada unique (warehouse_id, product_id).
         DB::table('inventory_stocks')->insertOrIgnore([

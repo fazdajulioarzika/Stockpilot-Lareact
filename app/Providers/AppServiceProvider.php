@@ -14,6 +14,8 @@ use App\Models\StockIssue;
 use App\Policies\InventoryDocumentPolicy;
 use App\Models\StockTransfer;
 use App\Policies\TransferPolicy;
+use App\Models\Stocktake;
+use App\Policies\StocktakePolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(GoodsReceipt::class, InventoryDocumentPolicy::class);
         Gate::policy(StockIssue::class, InventoryDocumentPolicy::class);
         Gate::policy(StockTransfer::class, TransferPolicy::class);
+        Gate::policy(Stocktake::class, StocktakePolicy::class);
     }
 
     /**
