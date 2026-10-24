@@ -35,4 +35,8 @@ class InventoryDocumentPolicy
     {
         return $this->update($user, $doc);
     }
+    public function delete(User $user, Model $doc): bool
+    {
+        return $this->update($user, $doc);
+    }
 }
