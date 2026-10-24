@@ -10,6 +10,7 @@ import {
     Tags,
     Truck,
     Warehouse,
+    ArrowLeftRight,
     type LucideIcon,
 } from "lucide-react";
 
@@ -64,6 +65,7 @@ const groups: Group[] = [
                 href: "/stock-issues",
                 icon: PackageMinus,
             },
+            { title: "Transfer", href: "/transfers", icon: ArrowLeftRight },
         ],
     },
 

@@ -9,6 +9,7 @@ use App\Http\Controllers\GoodsReceiptController;
 use App\Http\Controllers\StockIssueController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\StockTransferController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->parameters(['stock-issues' => 'stock_issue']);
     Route::post('stock-issues/{stock_issue}/post', [StockIssueController::class, 'post'])
         ->name('stock-issues.post');
+
+    Route::resource('transfers', StockTransferController::class)
+        ->parameters(['transfers' => 'stock_transfer']);
+
+    Route::prefix('transfers/{stock_transfer}')->name('transfers.')->group(function () {
+        Route::post('submit', [StockTransferController::class, 'submit'])->name('submit');
+        Route::post('approve', [StockTransferController::class, 'approve'])->name('approve');
+        Route::post('dispatch', [StockTransferController::class, 'dispatchTransfer'])->name('dispatch');
+        Route::post('receive', [StockTransferController::class, 'receive'])->name('receive');
+        Route::post('return', [StockTransferController::class, 'returnRemainder'])->name('return');
+        Route::post('cancel', [StockTransferController::class, 'cancel'])->name('cancel');
+    });
 
     // Hanya Admin yang boleh menulis (dicek di backend, bukan di React).
     Route::middleware('can:manage-master-data')->group(function () {
