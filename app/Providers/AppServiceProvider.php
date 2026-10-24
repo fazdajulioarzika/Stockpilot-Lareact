@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Gate;
 use App\Models\GoodsReceipt;
 use App\Models\StockIssue;
 use App\Policies\InventoryDocumentPolicy;
+use App\Models\StockTransfer;
+use App\Policies\TransferPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-master-data', fn (User $user) => $user->isAdmin());
         Gate::policy(GoodsReceipt::class, InventoryDocumentPolicy::class);
         Gate::policy(StockIssue::class, InventoryDocumentPolicy::class);
+        Gate::policy(StockTransfer::class, TransferPolicy::class);
     }
 
     /**

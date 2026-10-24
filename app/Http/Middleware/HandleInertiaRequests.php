@@ -46,6 +46,9 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            'abilities' => fn () => $request->user() ? [
+                'manageMasterData' => $request->user()->can('manage-master-data'),
+            ] : null,
         ];
     }
 }

@@ -15,6 +15,7 @@ class StockMovementController extends Controller
     private const DOCUMENT_ROUTES = [
         'App\Models\GoodsReceipt' => '/goods-receipts',
         'App\Models\StockIssue' => '/stock-issues',
+        'App\Models\StockTransfer' => '/transfers',
     ];
 
     public function index(Request $request): Response

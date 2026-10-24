@@ -1,84 +1,116 @@
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import {
-    BookOpen,
-    FolderGit2,
-    LayoutGrid,
-    Ruler,
-    Tags,
-    Package,
-    Truck,
-    Warehouse,
-    PackagePlus,
-    PackageMinus,
     Boxes,
     History,
+    LayoutGrid,
+    Package,
+    PackageMinus,
+    PackagePlus,
+    Ruler,
+    Tags,
+    Truck,
+    Warehouse,
+    type LucideIcon,
 } from "lucide-react";
+
 import AppLogo from "@/components/app-logo";
-import { NavFooter } from "@/components/nav-footer";
-import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
+    SidebarGroup,
+    SidebarGroupLabel,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { dashboard } from "@/routes";
-import type { NavItem } from "@/types";
 
-const mainNavItems: NavItem[] = [
-    {
-        title: "Dashboard",
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: "Categories",
-        href: "/categories",
-        icon: Tags,
-    },
-    {
-        title: "Units",
-        href: "/units",
-        icon: Ruler,
-    },
-    {
-        title: "Products",
-        href: "/products",
-        icon: Package,
-    },
-    { title: "Suppliers", href: "/suppliers", icon: Truck },
-    { title: "Warehouses", href: "/warehouses", icon: Warehouse },
-    { title: "Inventory", href: "/inventory", icon: Boxes },
-    { title: "Stock Movements", href: "/stock-movements", icon: History },
-    { title: "Barang Masuk", href: "/goods-receipts", icon: PackagePlus },
-    { title: "Barang Keluar", href: "/stock-issues", icon: PackageMinus },
-];
+type Item = {
+    title: string;
+    href: string;
+    icon: LucideIcon;
+    adminOnly?: boolean;
+};
+type Group = { label: string; items: Item[] };
 
-const footerNavItems: NavItem[] = [
+const groups: Group[] = [
     {
-        title: "Repository",
-        href: "https://github.com/laravel/react-starter-kit",
-        icon: FolderGit2,
+        label: "Platform",
+        items: [{ title: "Dashboard", href: "/dashboard", icon: LayoutGrid }],
     },
     {
-        title: "Documentation",
-        href: "https://laravel.com/docs/starter-kits#react",
-        icon: BookOpen,
+        label: "Stok",
+        items: [
+            { title: "Inventory", href: "/inventory", icon: Boxes },
+            {
+                title: "Stock Movements",
+                href: "/stock-movements",
+                icon: History,
+            },
+        ],
+    },
+    {
+        label: "Transaksi",
+        items: [
+            {
+                title: "Barang Masuk",
+                href: "/goods-receipts",
+                icon: PackagePlus,
+            },
+            {
+                title: "Barang Keluar",
+                href: "/stock-issues",
+                icon: PackageMinus,
+            },
+        ],
+    },
+
+    {
+        label: "Master Data",
+        items: [
+            { title: "Products", href: "/products", icon: Package },
+            {
+                title: "Categories",
+                href: "/categories",
+                icon: Tags,
+                adminOnly: true,
+            },
+            { title: "Units", href: "/units", icon: Ruler, adminOnly: true },
+            {
+                title: "Suppliers",
+                href: "/suppliers",
+                icon: Truck,
+                adminOnly: true,
+            },
+            {
+                title: "Warehouses",
+                href: "/warehouses",
+                icon: Warehouse,
+                adminOnly: true,
+            },
+        ],
     },
 ];
 
 export function AppSidebar() {
+    const { url, props } = usePage<{
+        abilities?: { manageMasterData: boolean } | null;
+    }>();
+    const isAdmin = props.abilities?.manageMasterData === true;
+    const path = url.split("?")[0];
+
+    const isActive = (href: string) =>
+        path === href || path.startsWith(`${href}/`);
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -86,12 +118,37 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
-                <NavMain items={mainNavItems} />
+            <SidebarContent className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {groups
+                    .map((g) => ({
+                        ...g,
+                        items: g.items.filter((i) => !i.adminOnly || isAdmin),
+                    }))
+                    .filter((g) => g.items.length > 0)
+                    .map((group) => (
+                        <SidebarGroup key={group.label} className="px-2 py-0">
+                            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+                            <SidebarMenu>
+                                {group.items.map((item) => (
+                                    <SidebarMenuItem key={item.href}>
+                                        <SidebarMenuButton
+                                            asChild
+                                            isActive={isActive(item.href)}
+                                            tooltip={{ children: item.title }}
+                                        >
+                                            <Link href={item.href} prefetch>
+                                                <item.icon />
+                                                <span>{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroup>
+                    ))}
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
