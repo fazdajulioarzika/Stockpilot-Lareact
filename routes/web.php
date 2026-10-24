@@ -7,6 +7,8 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\GoodsReceiptController;
 use App\Http\Controllers\StockIssueController;
+use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\InventoryController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +23,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('products', ProductController::class)->only(['index']);
     Route::resource('suppliers', SupplierController::class)->only(['index']);
     Route::resource('warehouses', WarehouseController::class)->only(['index']);
+    Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
+    Route::get('stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
 
     Route::resource('goods-receipts', GoodsReceiptController::class)
         ->parameters(['goods-receipts' => 'goods_receipt']);

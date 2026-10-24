@@ -10,6 +10,8 @@ import {
     Warehouse,
     PackagePlus,
     PackageMinus,
+    Boxes,
+    History,
 } from "lucide-react";
 import AppLogo from "@/components/app-logo";
 import { NavFooter } from "@/components/nav-footer";
@@ -50,6 +52,8 @@ const mainNavItems: NavItem[] = [
     },
     { title: "Suppliers", href: "/suppliers", icon: Truck },
     { title: "Warehouses", href: "/warehouses", icon: Warehouse },
+    { title: "Inventory", href: "/inventory", icon: Boxes },
+    { title: "Stock Movements", href: "/stock-movements", icon: History },
     { title: "Barang Masuk", href: "/goods-receipts", icon: PackagePlus },
     { title: "Barang Keluar", href: "/stock-issues", icon: PackageMinus },
 ];
