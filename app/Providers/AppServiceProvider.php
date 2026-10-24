@@ -9,6 +9,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
+use App\Models\GoodsReceipt;
+use App\Models\StockIssue;
+use App\Policies\InventoryDocumentPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::define('manage-master-data', fn (User $user) => $user->isAdmin());
+        Gate::policy(GoodsReceipt::class, InventoryDocumentPolicy::class);
+        Gate::policy(StockIssue::class, InventoryDocumentPolicy::class);
     }
 
     /**
