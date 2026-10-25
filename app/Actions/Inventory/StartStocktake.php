@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Warehouse;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class StartStocktake extends StocktakeAction
 {
@@ -68,6 +69,8 @@ class StartStocktake extends StocktakeAction
                 'started_at' => now(),
                 'started_by' => $user->id,
             ])->save();
+
+            AuditLog::record('stocktake.started', $s, $user, ['items' => $s->items()->count()]);
 
             return $s;
         });

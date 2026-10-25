@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\StockService;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class ReturnTransferRemainder extends TransferAction
 {
@@ -63,6 +64,8 @@ class ReturnTransferRemainder extends TransferAction
                 'type' => 'return',
                 'created_by' => $user->id,
             ]);
+
+            AuditLog::record('transfer.remainder_returned', $t, $user);
 
             return $t;
         });

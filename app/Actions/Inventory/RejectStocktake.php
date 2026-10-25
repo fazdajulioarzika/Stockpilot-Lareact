@@ -7,6 +7,7 @@ use App\Models\Stocktake;
 use App\Models\User;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class RejectStocktake extends StocktakeAction
 {
@@ -19,7 +20,7 @@ class RejectStocktake extends StocktakeAction
             throw new DomainException('Catatan penolakan wajib diisi.');
         }
 
-        return DB::transaction(function () use ($stocktake, $note) {
+        return DB::transaction(function () use ($stocktake, $note, $user) {
             $s = $this->lockInStatus($stocktake, StocktakeStatus::PendingApproval);
 
             $s->forceFill([
@@ -28,7 +29,7 @@ class RejectStocktake extends StocktakeAction
                 'submitted_at' => null,
                 'submitted_by' => null,
             ])->save();
-
+            AuditLog::record('stocktake.rejected', $s, $user, ['note' => $note]);
             return $s;
         });
     }

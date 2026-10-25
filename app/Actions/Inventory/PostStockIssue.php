@@ -11,6 +11,7 @@ use App\Models\Warehouse;
 use App\Services\StockService;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class PostStockIssue
 {
@@ -63,6 +64,8 @@ class PostStockIssue
                 'posted_at' => now(),
                 'posted_by' => $user->id,
             ])->save();
+
+            AuditLog::record('stock_issue.posted', $issue, $user, ['warehouse_id' => $issue->warehouse_id, 'items' => $items->count()]);
 
             return $issue;
         });

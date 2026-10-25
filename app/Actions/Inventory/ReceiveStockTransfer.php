@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\StockService;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class ReceiveStockTransfer extends TransferAction
 {
@@ -90,6 +91,8 @@ class ReceiveStockTransfer extends TransferAction
                 'idempotency_key' => $idempotencyKey,
                 'created_by' => $user->id,
             ]);
+
+            AuditLog::record('transfer.received', $t, $user, ['lines' => count($lines), 'completed' => $done]);
 
             return $t;
         });

@@ -11,6 +11,7 @@ use App\Models\Warehouse;
 use App\Services\StockService;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class PostGoodsReceipt
 {
@@ -62,7 +63,7 @@ class PostGoodsReceipt
                 'posted_at' => now(),
                 'posted_by' => $user->id,
             ])->save();
-
+            AuditLog::record('goods_receipt.posted', $receipt, $user, ['warehouse_id' => $receipt->warehouse_id, 'items' => $items->count()]);
             return $receipt;
         });
     }

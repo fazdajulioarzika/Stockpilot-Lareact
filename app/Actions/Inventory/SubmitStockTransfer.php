@@ -6,12 +6,13 @@ use App\Enums\TransferStatus;
 use App\Models\StockTransfer;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class SubmitStockTransfer extends TransferAction
 {
     public function execute(StockTransfer $transfer, User $user): StockTransfer
     {
-        return DB::transaction(function () use ($transfer) {
+        return DB::transaction(function () use ($transfer, $user) {
             $t = $this->lockInStatus($transfer, TransferStatus::Draft);
 
             $items = $t->items()->with('product:id,sku,is_active')->get();
@@ -25,6 +26,8 @@ class SubmitStockTransfer extends TransferAction
                 // Tanpa approval, persetujuan otomatis (approved_by tetap kosong).
                 'approved_at' => $needsApproval ? null : now(),
             ])->save();
+
+            AuditLog::record('transfer.submitted', $t, $user, ['status' => $t->status->value]);
 
             return $t;
         });

@@ -8,6 +8,7 @@ use App\Models\StockTransfer;
 use App\Models\User;
 use App\Services\StockService;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class DispatchStockTransfer extends TransferAction
 {
@@ -43,6 +44,8 @@ class DispatchStockTransfer extends TransferAction
                 'dispatched_by' => $user->id,
                 'dispatched_at' => now(),
             ])->save();
+
+            AuditLog::record('transfer.dispatched', $t, $user, ['items' => $items->count()]);
 
             return $t;
         });

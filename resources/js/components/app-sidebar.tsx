@@ -1,17 +1,19 @@
 import { Link, usePage } from "@inertiajs/react";
 import {
+    ArrowLeftRight,
     Boxes,
+    ClipboardCheck,
     History,
     LayoutGrid,
     Package,
     PackageMinus,
     PackagePlus,
     Ruler,
+    ScrollText,
     Tags,
     Truck,
+    Users,
     Warehouse,
-    ArrowLeftRight,
-    ClipboardCheck,
     type LucideIcon,
 } from "lucide-react";
 
@@ -29,11 +31,17 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
+type Abilities = {
+    manageMasterData: boolean;
+    viewAudit: boolean;
+    manageUsers: boolean;
+};
+
 type Item = {
     title: string;
     href: string;
     icon: LucideIcon;
-    adminOnly?: boolean;
+    ability?: keyof Abilities;
 };
 type Group = { label: string; items: Item[] };
 
@@ -74,7 +82,6 @@ const groups: Group[] = [
             },
         ],
     },
-
     {
         label: "Master Data",
         items: [
@@ -83,34 +90,60 @@ const groups: Group[] = [
                 title: "Categories",
                 href: "/categories",
                 icon: Tags,
-                adminOnly: true,
+                ability: "manageMasterData",
             },
-            { title: "Units", href: "/units", icon: Ruler, adminOnly: true },
+            {
+                title: "Units",
+                href: "/units",
+                icon: Ruler,
+                ability: "manageMasterData",
+            },
             {
                 title: "Suppliers",
                 href: "/suppliers",
                 icon: Truck,
-                adminOnly: true,
+                ability: "manageMasterData",
             },
             {
                 title: "Warehouses",
                 href: "/warehouses",
                 icon: Warehouse,
-                adminOnly: true,
+                ability: "manageMasterData",
+            },
+        ],
+    },
+    {
+        label: "Administrasi",
+        items: [
+            {
+                title: "Users",
+                href: "/users",
+                icon: Users,
+                ability: "manageUsers",
+            },
+            {
+                title: "Audit Log",
+                href: "/audit-logs",
+                icon: ScrollText,
+                ability: "viewAudit",
             },
         ],
     },
 ];
 
 export function AppSidebar() {
-    const { url, props } = usePage<{
-        abilities?: { manageMasterData: boolean } | null;
-    }>();
-    const isAdmin = props.abilities?.manageMasterData === true;
+    const { url, props } = usePage<{ abilities?: Abilities | null }>();
+    const abilities = props.abilities;
     const path = url.split("?")[0];
 
     const isActive = (href: string) =>
         path === href || path.startsWith(`${href}/`);
+    const allowed = (item: Item) =>
+        !item.ability || abilities?.[item.ability] === true;
+
+    const visible = groups
+        .map((g) => ({ ...g, items: g.items.filter(allowed) }))
+        .filter((g) => g.items.length > 0);
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -127,33 +160,27 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {groups
-                    .map((g) => ({
-                        ...g,
-                        items: g.items.filter((i) => !i.adminOnly || isAdmin),
-                    }))
-                    .filter((g) => g.items.length > 0)
-                    .map((group) => (
-                        <SidebarGroup key={group.label} className="px-2 py-0">
-                            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-                            <SidebarMenu>
-                                {group.items.map((item) => (
-                                    <SidebarMenuItem key={item.href}>
-                                        <SidebarMenuButton
-                                            asChild
-                                            isActive={isActive(item.href)}
-                                            tooltip={{ children: item.title }}
-                                        >
-                                            <Link href={item.href} prefetch>
-                                                <item.icon />
-                                                <span>{item.title}</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                ))}
-                            </SidebarMenu>
-                        </SidebarGroup>
-                    ))}
+                {visible.map((group) => (
+                    <SidebarGroup key={group.label} className="px-2 py-0">
+                        <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+                        <SidebarMenu>
+                            {group.items.map((item) => (
+                                <SidebarMenuItem key={item.href}>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={isActive(item.href)}
+                                        tooltip={{ children: item.title }}
+                                    >
+                                        <Link href={item.href} prefetch>
+                                            <item.icon />
+                                            <span>{item.title}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroup>
+                ))}
             </SidebarContent>
 
             <SidebarFooter>

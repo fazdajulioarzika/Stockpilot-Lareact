@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\StockService;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use app\Models\AuditLog;
 
 class PostStocktake extends StocktakeAction
 {
@@ -68,7 +69,7 @@ class PostStocktake extends StocktakeAction
                 'posted_at' => now(),
                 'completed_at' => now(),
             ])->save();
-
+            AuditLog::record('stocktake.posted', $s, $approver, ['adjusted_items' => $items->filter(fn ($i) => bccomp((string) $i->difference, '0', 3) !== 0)->count()]);
             return $s;
         });
     }

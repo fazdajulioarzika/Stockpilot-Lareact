@@ -16,6 +16,7 @@ use App\Models\StockTransfer;
 use App\Policies\TransferPolicy;
 use App\Models\Stocktake;
 use App\Policies\StocktakePolicy;
+use App\Enums\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,6 +38,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(StockIssue::class, InventoryDocumentPolicy::class);
         Gate::policy(StockTransfer::class, TransferPolicy::class);
         Gate::policy(Stocktake::class, StocktakePolicy::class);
+        Gate::define('view-audit-log', fn (User $user) => $user->hasRole(Role::Admin, Role::Manager));
+        Gate::define('manage-users', fn (User $user) => $user->isAdmin());
     }
 
     /**

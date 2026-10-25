@@ -7,6 +7,7 @@ use App\Models\Stocktake;
 use App\Models\User;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class SubmitStocktakeForApproval extends StocktakeAction
 {
@@ -41,6 +42,8 @@ class SubmitStocktakeForApproval extends StocktakeAction
                 'submitted_by' => $user->id,
                 'rejection_note' => null,
             ])->save();
+
+            AuditLog::record('stocktake.submitted', $s, $user, ['items' => $items->count()]);
 
             return $s;
         });

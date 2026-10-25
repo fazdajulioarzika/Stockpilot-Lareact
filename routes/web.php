@@ -12,13 +12,23 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\StocktakeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\UserController;
 
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    Route::middleware('can:manage-users')->group(function () {
+        Route::resource('users', UserController::class)->only(['index', 'store', 'update']);
+    });
+
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+    Route::get('audit-logs', [AuditLogController::class, 'index'])
+        ->middleware('can:view-audit-log')
+        ->name('audit-logs.index');
 
     Route::resource('stocktakes', StocktakeController::class);
     Route::prefix('stocktakes/{stocktake}')->name('stocktakes.')->group(function () {

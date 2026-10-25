@@ -6,6 +6,7 @@ use App\Enums\TransferStatus;
 use App\Models\StockTransfer;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class ApproveStockTransfer extends TransferAction
 {
@@ -19,6 +20,7 @@ class ApproveStockTransfer extends TransferAction
                 'approved_by' => $user->id,
                 'approved_at' => now(),
             ])->save();
+            AuditLog::record('transfer.approved', $t, $user);
 
             return $t;
         });
