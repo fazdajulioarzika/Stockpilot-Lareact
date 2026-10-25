@@ -58,13 +58,17 @@ class StockService
         }
         // Buat baris saldo jika belum ada. Aman terhadap request bersamaan
         // karena ada unique (warehouse_id, product_id).
-        DB::table('inventory_stocks')->insertOrIgnore([
-            'warehouse_id' => $warehouseId,
-            'product_id' => $productId,
-            'quantity' => 0,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        DB::table('inventory_stocks')->upsert(
+            [[
+                'warehouse_id' => $warehouseId,
+                'product_id' => $productId,
+                'quantity' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]],
+            ['warehouse_id', 'product_id'],
+            ['updated_at'],
+        );
 
         // Kunci baris. Request lain untuk produk dan gudang yang sama menunggu di sini.
         $stock = InventoryStock::query()
