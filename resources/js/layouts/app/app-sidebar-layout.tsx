@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { AppSidebarHeader } from "@/components/app-sidebar-header";
 import type { AppLayoutProps } from "@/types";
 import { FlashToaster } from "@/components/flash-toaster";
+import { WarehouseLockBanner } from "@/components/warehouse-lock-banner";
 
 export default function AppSidebarLayout({
     children,
@@ -14,6 +15,7 @@ export default function AppSidebarLayout({
             <AppSidebar />
             <AppContent variant="sidebar" className="min-w-0 overflow-x-clip">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
+                <WarehouseLockBanner />
                 {children}
             </AppContent>
             <FlashToaster />

@@ -11,6 +11,7 @@ import {
     Truck,
     Warehouse,
     ArrowLeftRight,
+    ClipboardCheck,
     type LucideIcon,
 } from "lucide-react";
 
@@ -66,6 +67,11 @@ const groups: Group[] = [
                 icon: PackageMinus,
             },
             { title: "Transfer", href: "/transfers", icon: ArrowLeftRight },
+            {
+                title: "Stock Opname",
+                href: "/stocktakes",
+                icon: ClipboardCheck,
+            },
         ],
     },
 

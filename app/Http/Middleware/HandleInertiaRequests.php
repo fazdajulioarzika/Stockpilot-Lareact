@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Enums\StocktakeStatus;
+use App\Models\Stocktake;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -49,6 +51,28 @@ class HandleInertiaRequests extends Middleware
             'abilities' => fn () => $request->user() ? [
                 'manageMasterData' => $request->user()->can('manage-master-data'),
             ] : null,
+            'lockedWarehouses' => function () use ($request) {
+                $user = $request->user();
+
+                if (!$user) {
+                    return [];
+                }
+
+                $ids = $user->accessibleWarehouseIds(); // null = semua gudang
+
+                return Stocktake::query()
+                    ->with('warehouse:id,code')
+                    ->whereIn('status', array_map(fn (StocktakeStatus $s) => $s->value, StocktakeStatus::locking()))
+                    ->when($ids !== null, fn ($q) => $q->whereIn('warehouse_id', $ids))
+                    ->get(['id', 'number', 'warehouse_id'])
+                    ->map(fn (Stocktake $s) => [
+                        'id' => $s->id,
+                        'number' => $s->number,
+                        'code' => $s->warehouse->code,
+                    ])
+                    ->values()
+                    ->all();
+            },
         ];
     }
 }

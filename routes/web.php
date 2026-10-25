@@ -10,6 +10,7 @@ use App\Http\Controllers\StockIssueController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\StocktakeController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,17 @@ Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
+
+    Route::resource('stocktakes', StocktakeController::class);
+
+    Route::prefix('stocktakes/{stocktake}')->name('stocktakes.')->group(function () {
+        Route::post('start', [StocktakeController::class, 'start'])->name('start');
+        Route::post('count', [StocktakeController::class, 'count'])->name('count');
+        Route::post('submit', [StocktakeController::class, 'submit'])->name('submit');
+        Route::post('approve', [StocktakeController::class, 'approve'])->name('approve');
+        Route::post('reject', [StocktakeController::class, 'reject'])->name('reject');
+        Route::post('cancel', [StocktakeController::class, 'cancel'])->name('cancel');
+    });
 
     // Semua role yang login boleh membaca.
     Route::resource('categories', CategoryController::class)->only(['index']);
