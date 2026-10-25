@@ -11,16 +11,16 @@ use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\StocktakeController;
+use App\Http\Controllers\DashboardController;
 
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::resource('stocktakes', StocktakeController::class);
-
     Route::prefix('stocktakes/{stocktake}')->name('stocktakes.')->group(function () {
         Route::post('start', [StocktakeController::class, 'start'])->name('start');
         Route::post('count', [StocktakeController::class, 'count'])->name('count');
