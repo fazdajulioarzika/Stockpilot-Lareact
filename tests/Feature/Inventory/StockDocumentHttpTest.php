@@ -50,7 +50,7 @@ function receiptPayload(object $w, ?array $items = null): array
     return [
         'warehouse_id' => $w->a->id,
         'reference' => 'PO-1',
-        'items' => $items ?? [['product_id' => $w->p1->id, 'quantity' => '10']],
+        'items' => $items ?? [['product_id' => $w->p1->id, 'quantity' => '10', 'unit_cost' => '1000']],
     ];
 }
 
@@ -205,7 +205,7 @@ it('replaces items when updating a draft and refuses to update a posted document
     $staff = httpUser(Role::WarehouseStaff, [$w->a->id]);
     $receipt = httpDraftReceipt($w, $staff);
 
-    $payload = receiptPayload($w, [['product_id' => $w->p2->id, 'quantity' => '4']]);
+    $payload = receiptPayload($w, [['product_id' => $w->p2->id, 'quantity' => '4', 'unit_cost' => '1000']]);
 
     $this->actingAs($staff)->put("/goods-receipts/{$receipt->id}", $payload)->assertRedirect();
 

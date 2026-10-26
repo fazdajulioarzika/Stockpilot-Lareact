@@ -77,7 +77,7 @@ class DashboardController extends Controller
             StockMovement::query()->with(['warehouse:id,code', 'product:id,sku,name', 'creator:id,name']),
             'warehouse_id',
         )
-            ->orderByDesc('id')
+            ->orderByDesc('created_at')->orderByDesc('id')
             ->limit(8)
             ->get()
             ->map(fn (StockMovement $m) => [

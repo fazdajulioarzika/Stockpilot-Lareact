@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\StockService;
 use Illuminate\Support\Facades\DB;
 use App\Models\AuditLog;
+use App\Support\Money;
 
 class DispatchStockTransfer extends TransferAction
 {
@@ -26,8 +27,7 @@ class DispatchStockTransfer extends TransferAction
             $this->assertUsable($t, $items);
 
             foreach ($items as $item) {
-                // Stok kurang: exception dilempar dan seluruh transaksi di-rollback.
-                $this->stock->apply(
+                $movement = $this->stock->apply(
                     $t->source_warehouse_id,
                     $item->product_id,
                     bcmul((string) $item->quantity, '-1', 3),
@@ -36,7 +36,10 @@ class DispatchStockTransfer extends TransferAction
                     $user->id,
                 );
 
-                $item->forceFill(['qty_sent' => $item->quantity])->save();
+                $item->forceFill([
+                    'qty_sent' => $item->quantity,
+                    'value_sent' => Money::normalize(bcmul((string) $movement->value_delta, '-1', 4)),
+                ])->save();
             }
 
             $t->forceFill([

@@ -36,6 +36,7 @@ type DocumentRow = {
     created_at: string;
     items_count: number;
     warehouse: { code: string; name: string };
+    is_reversed: boolean;
     creator: { name: string };
 };
 
@@ -195,7 +196,13 @@ export default function IndexView({
                                             {d.items_count}
                                         </TableCell>
                                         <TableCell>
-                                            <StatusBadge status={d.status} />
+                                            <StatusBadge
+                                                status={
+                                                    d.is_reversed
+                                                        ? "reversed"
+                                                        : d.status
+                                                }
+                                            />
                                         </TableCell>
                                         <TableCell>{d.creator.name}</TableCell>
                                         <TableCell>

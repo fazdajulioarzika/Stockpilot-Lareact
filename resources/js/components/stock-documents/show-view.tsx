@@ -1,7 +1,8 @@
 import { Head, Link, router } from "@inertiajs/react";
-import { Pencil, Send, Trash2 } from "lucide-react";
+import { Pencil, Send, Trash2, Undo2 } from "lucide-react";
 import { useState } from "react";
-
+import { ReverseDialog } from "./reverse-dialog";
+import { formatMoney } from "./types";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -36,17 +37,23 @@ type ShowDocument = {
     creator: { name: string };
     poster: { name: string } | null;
     supplier?: { name: string } | null;
+    reversal: {
+        reason: string;
+        created_at: string;
+        reverser: { name: string } | null;
+    } | null;
     items: {
         id: number;
         quantity: string;
         product: { sku: string; name: string; unit: { symbol: string } | null };
+        unit_cost?: string;
     }[];
 };
 
 export type ShowProps = {
     meta: DocumentMeta;
     document: ShowDocument;
-    can: { update: boolean; post: boolean };
+    can: { update: boolean; post: boolean; reverse: boolean };
 };
 
 function Field({
@@ -68,6 +75,7 @@ export default function ShowView({ meta, document: doc, can }: ShowProps) {
     const [postOpen, setPostOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [busy, setBusy] = useState(false);
+    const [reverseOpen, setReverseOpen] = useState(false);
 
     function confirmPost() {
         setBusy(true);
@@ -109,7 +117,9 @@ export default function ShowView({ meta, document: doc, can }: ShowProps) {
                         <h1 className="font-mono text-xl font-semibold">
                             {doc.number}
                         </h1>
-                        <StatusBadge status={doc.status} />
+                        <StatusBadge
+                            status={doc.reversal ? "reversed" : doc.status}
+                        />
                     </div>
 
                     <div className="flex gap-2">
@@ -136,9 +146,28 @@ export default function ShowView({ meta, document: doc, can }: ShowProps) {
                                 <Send className="mr-1 size-4" /> Posting
                             </Button>
                         )}
+                        {can.reverse && (
+                            <Button
+                                variant="outline"
+                                onClick={() => setReverseOpen(true)}
+                            >
+                                <Undo2 className="mr-1 size-4" /> Balik dokumen
+                            </Button>
+                        )}
                     </div>
                 </div>
-
+                {doc.reversal && (
+                    <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                        <span className="font-medium">
+                            Dokumen ini sudah dibalik
+                        </span>{" "}
+                        pada {formatDateTime(doc.reversal.created_at)}
+                        {doc.reversal.reverser
+                            ? ` oleh ${doc.reversal.reverser.name}`
+                            : ""}
+                        . Alasan: {doc.reversal.reason}
+                    </div>
+                )}
                 <dl className="grid gap-4 sm:grid-cols-2">
                     <Field label="Gudang">
                         {doc.warehouse.code} - {doc.warehouse.name}
@@ -174,6 +203,16 @@ export default function ShowView({ meta, document: doc, can }: ShowProps) {
                                     Jumlah
                                 </TableHead>
                                 <TableHead>Satuan</TableHead>
+                                {meta.type === "receipt" && (
+                                    <>
+                                        <TableHead className="text-right">
+                                            Harga satuan
+                                        </TableHead>
+                                        <TableHead className="text-right">
+                                            Subtotal
+                                        </TableHead>
+                                    </>
+                                )}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -191,6 +230,23 @@ export default function ShowView({ meta, document: doc, can }: ShowProps) {
                                     <TableCell>
                                         {item.product.unit?.symbol ?? "-"}
                                     </TableCell>
+                                    {meta.type === "receipt" && (
+                                        <>
+                                            <TableCell className="text-right">
+                                                {formatMoney(
+                                                    item.unit_cost ?? 0
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {formatMoney(
+                                                    Number(item.quantity) *
+                                                        Number(
+                                                            item.unit_cost ?? 0
+                                                        )
+                                                )}
+                                            </TableCell>
+                                        </>
+                                    )}
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -252,6 +308,17 @@ export default function ShowView({ meta, document: doc, can }: ShowProps) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <ReverseDialog
+                open={reverseOpen}
+                onOpenChange={setReverseOpen}
+                url={`${meta.basePath}/${doc.id}/reverse`}
+                number={doc.number}
+                effect={
+                    meta.type === "receipt"
+                        ? `mengurangi kembali stok di ${doc.warehouse.code} (ditolak jika stoknya sudah terpakai)`
+                        : `mengembalikan stok ke ${doc.warehouse.code}`
+                }
+            />
         </>
     );
 }

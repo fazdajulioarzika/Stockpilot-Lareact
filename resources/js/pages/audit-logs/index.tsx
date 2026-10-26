@@ -55,6 +55,9 @@ const ACTION_LABEL: Record<string, string> = {
     "stocktake.cancelled": "Opname dibatalkan",
     "user.created": "Pengguna dibuat",
     "user.updated": "Pengguna diubah",
+    "goods_receipt.reversed": "Barang masuk dibalik",
+    "stock_issue.reversed": "Barang keluar dibalik",
+    "stock.revalued": "Stok dinilai ulang",
 };
 
 function summary(metadata: Record<string, unknown>): string {

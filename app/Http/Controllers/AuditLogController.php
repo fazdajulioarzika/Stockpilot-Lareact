@@ -34,7 +34,7 @@ class AuditLogController extends Controller
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
             ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
             ->when($to, fn ($q) => $q->where('created_at', '<=', $to))
-            ->orderByDesc('id')
+            ->orderByDesc('created_at')->orderByDesc('id')
             ->paginate(20)
             ->withQueryString()
             ->through(function (AuditLog $l) {

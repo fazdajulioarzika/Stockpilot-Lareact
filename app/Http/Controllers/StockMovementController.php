@@ -38,7 +38,7 @@ class StockMovementController extends Controller
             ->when($type, fn ($q) => $q->where('movement_type', $type))
             ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
             ->when($to, fn ($q) => $q->where('created_at', '<=', $to))
-            ->orderByDesc('id')
+            ->orderByDesc('created_at')->orderByDesc('id')
             ->paginate(20)
             ->withQueryString()
             ->through(fn (StockMovement $m) => [

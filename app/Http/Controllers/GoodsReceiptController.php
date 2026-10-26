@@ -91,4 +91,8 @@ class GoodsReceiptController extends StockDocumentController
     {
         return $this->postDocument($request, $goodsReceipt);
     }
+    public function reverse(Request $request, GoodsReceipt $goodsReceipt): RedirectResponse
+    {
+        return $this->reverseDocument($request, $goodsReceipt);
+    }
 }

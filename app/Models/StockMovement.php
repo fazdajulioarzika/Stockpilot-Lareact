@@ -13,7 +13,7 @@ class StockMovement extends Model
 
     protected $fillable = [
         'product_id', 'warehouse_id', 'movement_type', 'quantity_delta',
-        'reference_type', 'reference_id', 'created_by', 'created_at',
+        'reference_type', 'reference_id', 'created_by', 'created_at', 'value_delta'
     ];
 
     protected function casts(): array
@@ -22,6 +22,7 @@ class StockMovement extends Model
             'movement_type' => MovementType::class,
             'quantity_delta' => 'decimal:3',
             'created_at' => 'datetime',
+            'value_delta' => 'decimal:4',
         ];
     }
 

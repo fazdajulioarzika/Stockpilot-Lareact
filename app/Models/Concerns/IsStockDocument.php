@@ -6,6 +6,7 @@ use App\Enums\DocumentStatus;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use LogicException;
 
 trait IsStockDocument
@@ -49,5 +50,9 @@ trait IsStockDocument
     public function isDraft(): bool
     {
         return $this->status === DocumentStatus::Draft;
+    }
+    public function reversal(): MorphOne
+    {
+        return $this->morphOne(\App\Models\DocumentReversal::class, 'document', 'document_type', 'document_id');
     }
 }

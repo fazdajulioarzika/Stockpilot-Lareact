@@ -11,7 +11,10 @@ class InventoryStock extends Model
 
     protected function casts(): array
     {
-        return ['quantity' => 'decimal:3'];
+        return [
+            'quantity' => 'decimal:3',
+            'total_value' => 'decimal:4',
+        ];
     }
 
     public function warehouse(): BelongsTo

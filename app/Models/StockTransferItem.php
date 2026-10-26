@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TransferStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Support\Money;
 use LogicException;
 
 class StockTransferItem extends Model
@@ -19,6 +20,9 @@ class StockTransferItem extends Model
             'qty_sent' => 'decimal:3',
             'qty_received' => 'decimal:3',
             'qty_returned' => 'decimal:3',
+            'value_sent' => 'decimal:4',
+            'value_received' => 'decimal:4',
+            'value_returned' => 'decimal:4',
         ];
     }
 
@@ -61,5 +65,28 @@ class StockTransferItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+    /** Nilai yang masih dalam perjalanan. */
+    public function remainingValue(): string
+    {
+        return Money::normalize(bcsub(
+            bcsub((string) $this->value_sent, (string) $this->value_received, 4),
+            (string) $this->value_returned,
+            4,
+        ));
+    }
+
+    /** Nilai untuk $qty yang diterima. Penerimaan terakhir mengambil sisa persisnya. */
+    public function allocateValue(string $qty): string
+    {
+        $remainingValue = $this->remainingValue();
+
+        if (bccomp($qty, $this->remaining(), 3) === 0) {
+            return $remainingValue;
+        }
+
+        $value = Money::round4(bcdiv(bcmul((string) $this->value_sent, $qty, 7), (string) $this->qty_sent, 8));
+
+        return bccomp($value, $remainingValue, 4) > 0 ? $remainingValue : $value;
     }
 }

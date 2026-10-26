@@ -10,11 +10,14 @@ class GoodsReceiptItem extends Model
 {
     use GuardsPostedDocument;
 
-    protected $fillable = ['goods_receipt_id', 'product_id', 'quantity'];
+    protected $fillable = ['goods_receipt_id', 'product_id', 'quantity', 'unit_cost'];
 
     protected function casts(): array
     {
-        return ['quantity' => 'decimal:3'];
+        return [
+            'quantity' => 'decimal:3',
+            'unit_cost' => 'decimal:4',
+        ];
     }
 
     public function document(): BelongsTo

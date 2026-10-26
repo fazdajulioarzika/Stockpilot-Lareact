@@ -14,6 +14,7 @@ import {
     Truck,
     Users,
     Warehouse,
+    Coins,
     type LucideIcon,
 } from "lucide-react";
 
@@ -35,6 +36,7 @@ type Abilities = {
     manageMasterData: boolean;
     viewAudit: boolean;
     manageUsers: boolean;
+    viewValuation: boolean;
 };
 
 type Item = {
@@ -58,6 +60,12 @@ const groups: Group[] = [
                 title: "Stock Movements",
                 href: "/stock-movements",
                 icon: History,
+            },
+            {
+                title: "Nilai Persediaan",
+                href: "/valuation",
+                icon: Coins,
+                ability: "viewValuation",
             },
         ],
     },

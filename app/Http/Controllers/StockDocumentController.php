@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Actions\Inventory\ReverseStockDocument;
 
 abstract class StockDocumentController extends Controller
 {
@@ -49,7 +50,11 @@ abstract class StockDocumentController extends Controller
     private function itemRows(array $data): array
     {
         return collect($data['items'])
-            ->map(fn ($i) => ['product_id' => (int) $i['product_id'], 'quantity' => $i['quantity']])
+            ->map(fn ($i) => [
+                'product_id' => (int) $i['product_id'],
+                'quantity' => $i['quantity'],
+                ...(isset($i['unit_cost']) ? ['unit_cost' => $i['unit_cost']] : []),
+            ])
             ->all();
     }
 
@@ -80,6 +85,7 @@ abstract class StockDocumentController extends Controller
         $documents = $model::query()
             ->with(['warehouse:id,code,name', 'creator:id,name'])
             ->withCount('items')
+            ->withExists('reversal as is_reversed')
             ->when($ids !== null, fn ($q) => $q->whereIn('warehouse_id', $ids))
             ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w
                 ->where('number', 'like', "%{$search}%")
@@ -162,6 +168,7 @@ abstract class StockDocumentController extends Controller
             'poster:id,name',
             'items.product:id,sku,name,unit_id',
             'items.product.unit:id,symbol',
+            'reversal.reverser:id,name',
             ...$this->extraRelations(),
         ]);
 
@@ -171,6 +178,7 @@ abstract class StockDocumentController extends Controller
             'can' => [
                 'update' => $user->can('update', $doc),
                 'post' => $user->can('post', $doc),
+                'reverse' => $user->can('reverse', $doc),
             ],
         ]);
     }
@@ -229,5 +237,24 @@ abstract class StockDocumentController extends Controller
         }
 
         return back()->with('success', 'Dokumen berhasil diposting. Stok sudah diperbarui.');
+    }
+    protected function reverseDocument(Request $request, Model $doc): RedirectResponse
+    {
+        Gate::authorize('reverse', $doc);
+
+        $data = $request->validate(
+            ['reason' => ['required', 'string', 'max:255']],
+            [],
+            ['reason' => 'alasan pembalikan'],
+        );
+
+        try {
+            app(ReverseStockDocument::class)->execute($doc, $request->user(), $data['reason']);
+        } catch (DomainException $e) {
+            // Transaksi sudah di-rollback di dalam action, saldo tidak berubah.
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Dokumen dibalik. Stok disesuaikan dan tercatat di ledger.');
     }
 }

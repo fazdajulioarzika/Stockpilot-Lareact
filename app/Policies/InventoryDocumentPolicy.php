@@ -39,4 +39,11 @@ class InventoryDocumentPolicy
     {
         return $this->update($user, $doc);
     }
+    public function reverse(User $user, Model $doc): bool
+    {
+        return $user->hasRole(Role::Admin, Role::Manager)
+            && $doc->status === DocumentStatus::Posted
+            && $user->canAccessWarehouse($doc->warehouse_id)
+            && !$doc->reversal()->exists();
+    }
 }

@@ -40,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Stocktake::class, StocktakePolicy::class);
         Gate::define('view-audit-log', fn (User $user) => $user->hasRole(Role::Admin, Role::Manager));
         Gate::define('manage-users', fn (User $user) => $user->isAdmin());
+        Gate::define('view-valuation', fn (User $user) => $user->hasRole(Role::Admin, Role::Manager));
     }
 
     /**

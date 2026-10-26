@@ -30,3 +30,11 @@ export function formatDateTime(value: string | null): string {
 export function formatQty(value: string | number): string {
     return Number(value).toLocaleString("id-ID", { maximumFractionDigits: 3 });
 }
+export function formatMoney(value: string | number): string {
+    return Number(value).toLocaleString("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 4,
+    });
+}

@@ -11,4 +11,5 @@ enum MovementType: string
     case Adjustment = 'adjustment';
     case Reversal = 'reversal';
     case TransferReturn = 'transfer_return';
+    case Revaluation = 'revaluation';
 }

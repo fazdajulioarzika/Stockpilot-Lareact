@@ -62,6 +62,7 @@ const TYPE_LABEL: Record<string, string> = {
     adjustment: "Penyesuaian",
     reversal: "Reversal",
     transfer_return: "Retur transfer",
+    revaluation: "Penilaian ulang",
 };
 
 export default function StockMovementsIndex({

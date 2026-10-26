@@ -52,6 +52,7 @@ class HandleInertiaRequests extends Middleware
                 'manageMasterData' => $request->user()->can('manage-master-data'),
                 'viewAudit' => $request->user()->can('view-audit-log'),
                 'manageUsers' => $request->user()->can('manage-users'),
+                'viewValuation' => $request->user()->can('view-valuation'),
             ] : null,
             'lockedWarehouses' => function () use ($request) {
                 $user = $request->user();

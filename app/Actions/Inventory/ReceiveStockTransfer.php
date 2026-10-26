@@ -62,6 +62,8 @@ class ReceiveStockTransfer extends TransferAction
                     throw new DomainException('Kuantitas diterima melebihi jumlah yang masih dalam perjalanan.');
                 }
 
+                $value = $item->allocateValue($qty);
+
                 $this->stock->apply(
                     $t->destination_warehouse_id,
                     $item->product_id,
@@ -69,9 +71,13 @@ class ReceiveStockTransfer extends TransferAction
                     MovementType::TransferIn,
                     $t,
                     $user->id,
+                    $value,
                 );
 
-                $item->forceFill(['qty_received' => bcadd((string) $item->qty_received, $qty, 3)])->save();
+                $item->forceFill([
+                    'qty_received' => bcadd((string) $item->qty_received, $qty, 3),
+                    'value_received' => bcadd((string) $item->value_received, $value, 4),
+                ])->save();
             }
 
             if ($byItem->keys()->diff($items->keys())->isNotEmpty()) {

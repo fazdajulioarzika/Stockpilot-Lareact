@@ -34,6 +34,8 @@ class ReturnTransferRemainder extends TransferAction
                     continue;
                 }
 
+                $value = $item->remainingValue();
+
                 $this->stock->apply(
                     $t->source_warehouse_id,
                     $item->product_id,
@@ -41,9 +43,13 @@ class ReturnTransferRemainder extends TransferAction
                     MovementType::TransferReturn,
                     $t,
                     $user->id,
+                    $value,
                 );
 
-                $item->forceFill(['qty_returned' => bcadd((string) $item->qty_returned, $remaining, 3)])->save();
+                $item->forceFill([
+                    'qty_returned' => bcadd((string) $item->qty_returned, $remaining, 3),
+                    'value_returned' => bcadd((string) $item->value_returned, $value, 4),
+                ])->save();
                 $returned = true;
             }
 

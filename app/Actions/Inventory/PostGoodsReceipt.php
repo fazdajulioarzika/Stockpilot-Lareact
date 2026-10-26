@@ -12,6 +12,7 @@ use App\Services\StockService;
 use DomainException;
 use Illuminate\Support\Facades\DB;
 use App\Models\AuditLog;
+use App\Support\Money;
 
 class PostGoodsReceipt
 {
@@ -48,6 +49,8 @@ class PostGoodsReceipt
                     throw new DomainException("Kuantitas produk {$item->product->sku} harus lebih besar dari nol.");
                 }
 
+                $value = Money::round4(bcmul((string) $item->quantity, (string) $item->unit_cost, 7));
+
                 $this->stock->apply(
                     $receipt->warehouse_id,
                     $item->product_id,
@@ -55,6 +58,7 @@ class PostGoodsReceipt
                     MovementType::Receipt,
                     $receipt,
                     $user->id,
+                    $value,
                 );
             }
 

@@ -14,12 +14,17 @@ use App\Http\Controllers\StocktakeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ValuationController;
 
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    Route::get('valuation', [ValuationController::class, 'index'])
+        ->middleware('can:view-valuation')
+        ->name('valuation.index');
 
     Route::middleware('can:manage-users')->group(function () {
         Route::resource('users', UserController::class)->only(['index', 'store', 'update']);
@@ -53,11 +58,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->parameters(['goods-receipts' => 'goods_receipt']);
     Route::post('goods-receipts/{goods_receipt}/post', [GoodsReceiptController::class, 'post'])
         ->name('goods-receipts.post');
+    Route::post('goods-receipts/{goods_receipt}/reverse', [GoodsReceiptController::class, 'reverse'])
+        ->name('goods-receipts.reverse');
 
     Route::resource('stock-issues', StockIssueController::class)
         ->parameters(['stock-issues' => 'stock_issue']);
     Route::post('stock-issues/{stock_issue}/post', [StockIssueController::class, 'post'])
         ->name('stock-issues.post');
+    Route::post('stock-issues/{stock_issue}/reverse', [StockIssueController::class, 'reverse'])
+        ->name('stock-issues.reverse');
 
     Route::resource('transfers', StockTransferController::class)
         ->parameters(['transfers' => 'stock_transfer']);

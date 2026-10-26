@@ -78,4 +78,8 @@ class StockIssueController extends StockDocumentController
     {
         return $this->postDocument($request, $stockIssue);
     }
+    public function reverse(Request $request, StockIssue $stockIssue): RedirectResponse
+    {
+        return $this->reverseDocument($request, $stockIssue);
+    }
 }

@@ -15,7 +15,7 @@ import {
 
 import { DocumentMeta, WarehouseOption } from "./types";
 
-type Line = { product_id: string; quantity: string };
+type Line = { product_id: string; quantity: string; unit_cost: string };
 
 type FormData = {
     warehouse_id: string;
@@ -41,7 +41,7 @@ type ExistingDocument = {
     reason?: string | null;
     reference: string | null;
     notes: string | null;
-    items: { product_id: number; quantity: string }[];
+    items: { product_id: number; quantity: string; unit_cost?: string }[];
 };
 
 export type FormProps = {
@@ -73,8 +73,9 @@ export default function FormView({
             ? doc.items.map((i) => ({
                   product_id: String(i.product_id),
                   quantity: String(Number(i.quantity)),
+                  unit_cost: String(Number(i.unit_cost ?? 0)),
               }))
-            : [{ product_id: "", quantity: "" }],
+            : [{ product_id: "", quantity: "", unit_cost: "" }],
     });
 
     const errors = form.errors as Record<string, string | undefined>;
@@ -95,7 +96,7 @@ export default function FormView({
     function addLine() {
         form.setData("items", [
             ...form.data.items,
-            { product_id: "", quantity: "" },
+            { product_id: "", quantity: "", unit_cost: "" },
         ]);
     }
 
@@ -337,7 +338,43 @@ export default function FormView({
                                             {unit ?? ""}
                                         </span>
                                     </div>
-
+                                    {meta.type === "receipt" && (
+                                        <div className="grid w-44 gap-1">
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                step="0.0001"
+                                                inputMode="decimal"
+                                                placeholder="Harga satuan"
+                                                aria-label={`Harga satuan item ${
+                                                    index + 1
+                                                }`}
+                                                value={line.unit_cost}
+                                                onChange={(e) =>
+                                                    setLine(index, {
+                                                        unit_cost:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                            />
+                                            {line.unit_cost !== "" &&
+                                                line.quantity !== "" && (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        ={" "}
+                                                        {(
+                                                            Number(
+                                                                line.unit_cost
+                                                            ) *
+                                                            Number(
+                                                                line.quantity
+                                                            )
+                                                        ).toLocaleString(
+                                                            "id-ID"
+                                                        )}
+                                                    </span>
+                                                )}
+                                        </div>
+                                    )}
                                     <Button
                                         type="button"
                                         variant="ghost"
@@ -357,6 +394,11 @@ export default function FormView({
                                 {errors[`items.${index}.quantity`] && (
                                     <p className="text-sm text-destructive">
                                         {errors[`items.${index}.quantity`]}
+                                    </p>
+                                )}
+                                {errors[`items.${index}.unit_cost`] && (
+                                    <p className="text-sm text-destructive">
+                                        {errors[`items.${index}.unit_cost`]}
                                     </p>
                                 )}
                             </div>

@@ -139,6 +139,7 @@ export default function Dashboard({
                     <Kpi
                         title="SKU aktif"
                         value={fmt(kpi.total_sku)}
+                        hint="Total produk yang tersedia di gudang"
                         icon={Package}
                         href="/products"
                     />
