@@ -37,6 +37,7 @@ type ShowDocument = {
     creator: { name: string };
     poster: { name: string } | null;
     supplier?: { name: string } | null;
+    purchase_order?: { id: number; number: string } | null;
     reversal: {
         reason: string;
         created_at: string;
@@ -180,6 +181,16 @@ export default function ShowView({ meta, document: doc, can }: ShowProps) {
                         <Field label="Alasan">{doc.reason ?? "-"}</Field>
                     )}
                     <Field label="Referensi">{doc.reference ?? "-"}</Field>
+                    {meta.type === "receipt" && doc.purchase_order && (
+                        <Field label="Purchase Order">
+                            <Link
+                                href={`/purchase-orders/${doc.purchase_order.id}`}
+                                className="underline underline-offset-4"
+                            >
+                                {doc.purchase_order.number}
+                            </Link>
+                        </Field>
+                    )}
                     <Field label="Catatan">{doc.notes ?? "-"}</Field>
                     <Field label="Dibuat">
                         {formatDateTime(doc.created_at)} oleh {doc.creator.name}

@@ -8,6 +8,7 @@ use App\Models\StockIssue;
 use App\Models\Stocktake;
 use App\Models\StockTransfer;
 use App\Models\User;
+use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,6 +20,7 @@ class AuditLogController extends Controller
         StockIssue::class => '/stock-issues',
         StockTransfer::class => '/transfers',
         Stocktake::class => '/stocktakes',
+        PurchaseOrder::class => '/purchase-orders',
     ];
 
     public function index(Request $request): Response

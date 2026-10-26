@@ -179,7 +179,7 @@ export default function StockMovementsIndex({
                             className="w-40"
                         />
                     </div>
-                    <div className="ml-auto">
+                    <div className="mt-4">
                         <ExportButtons
                             path="/exports/stock-movements"
                             params={{

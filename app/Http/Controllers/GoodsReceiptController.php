@@ -37,13 +37,24 @@ class GoodsReceiptController extends StockDocumentController
 
     protected function extraRelations(): array
     {
-        return ['supplier:id,name'];
+        return ['supplier:id,name', 'purchaseOrder:id,number'];
     }
 
-    protected function extraFormProps(): array
+    protected function extraFormProps(?Model $doc = null): array
     {
+        $order = $doc?->purchase_order_id ? $doc->purchaseOrder()->with('items')->first() : null;
+
         return [
             'suppliers' => Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'purchase_order' => $order ? [
+                'id' => $order->id,
+                'number' => $order->number,
+                'items' => $order->items->map(fn ($i) => [
+                    'product_id' => $i->product_id,
+                    'outstanding' => $i->outstanding(),
+                    'unit_cost' => (string) $i->unit_cost,
+                ])->all(),
+            ] : null,
         ];
     }
 

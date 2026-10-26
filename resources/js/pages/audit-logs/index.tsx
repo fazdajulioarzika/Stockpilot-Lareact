@@ -59,6 +59,10 @@ const ACTION_LABEL: Record<string, string> = {
     "stock_issue.reversed": "Barang keluar dibalik",
     "stock.revalued": "Stok dinilai ulang",
     "report.exported": "Laporan diunduh",
+    "purchase_order.submitted": "PO diajukan",
+    "purchase_order.approved": "PO disetujui",
+    "purchase_order.cancelled": "PO dibatalkan",
+    "purchase_order.closed": "PO ditutup",
 };
 
 function summary(metadata: Record<string, unknown>): string {

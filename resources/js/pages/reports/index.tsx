@@ -218,7 +218,7 @@ export default function ReportsIndex({
                         </Button>
                     </form>
 
-                    <div className="ml-auto">
+                    <div className="ml-auto mt-4">
                         <ExportButtons
                             path="/reports/export"
                             params={exportParams}

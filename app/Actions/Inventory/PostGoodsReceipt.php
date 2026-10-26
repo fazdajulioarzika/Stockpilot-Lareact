@@ -4,15 +4,18 @@ namespace App\Actions\Inventory;
 
 use App\Enums\DocumentStatus;
 use App\Enums\MovementType;
+use App\Enums\PurchaseOrderStatus;
 use App\Exceptions\DocumentAlreadyPostedException;
+use App\Models\AuditLog;
 use App\Models\GoodsReceipt;
+use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\StockService;
-use DomainException;
-use Illuminate\Support\Facades\DB;
-use App\Models\AuditLog;
 use App\Support\Money;
+use DomainException;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class PostGoodsReceipt
 {
@@ -39,6 +42,9 @@ class PostGoodsReceipt
             if (!Warehouse::whereKey($receipt->warehouse_id)->value('is_active')) {
                 throw new DomainException('Gudang tidak aktif.');
             }
+
+            // Urutan kunci: dokumen, PO dan itemnya, baru saldo stok (sama dengan pembalikan).
+            $order = $receipt->purchase_order_id ? $this->receiveAgainstOrder($receipt, $items) : null;
 
             foreach ($items as $item) {
                 if (!$item->product->is_active) {
@@ -67,8 +73,58 @@ class PostGoodsReceipt
                 'posted_at' => now(),
                 'posted_by' => $user->id,
             ])->save();
-            AuditLog::record('goods_receipt.posted', $receipt, $user, ['warehouse_id' => $receipt->warehouse_id, 'items' => $items->count()]);
+
+            AuditLog::record('goods_receipt.posted', $receipt, $user, array_filter([
+                'warehouse_id' => $receipt->warehouse_id,
+                'items' => $items->count(),
+                'purchase_order' => $order?->number,
+                'purchase_order_status' => $order?->status->value,
+            ], fn ($v) => $v !== null));
+
             return $receipt;
         });
+    }
+
+    /** Catat penerimaan pada PO dan ubah statusnya. Semua pelanggaran membatalkan seluruh posting. */
+    private function receiveAgainstOrder(GoodsReceipt $receipt, Collection $items): PurchaseOrder
+    {
+        $order = PurchaseOrder::query()->whereKey($receipt->purchase_order_id)->lockForUpdate()->firstOrFail();
+
+        if (!$order->status->canReceive()) {
+            throw new DomainException("PO {$order->number} berstatus {$order->status->label()} dan tidak dapat menerima barang.");
+        }
+
+        if ((int) $order->warehouse_id !== (int) $receipt->warehouse_id) {
+            throw new DomainException("Gudang penerimaan berbeda dari gudang PO {$order->number}.");
+        }
+
+        // Urut product_id agar urutan kunci konsisten antar request (mencegah deadlock).
+        $orderItems = $order->items()->orderBy('product_id')->lockForUpdate()->get()->keyBy('product_id');
+
+        foreach ($items as $item) {
+            $line = $orderItems->get($item->product_id)
+                ?? throw new DomainException("Produk {$item->product->sku} tidak ada di PO {$order->number}.");
+
+            if (bccomp((string) $item->quantity, $line->outstanding(), 3) > 0) {
+                throw new DomainException(
+                    "Jumlah {$item->product->sku} melebihi sisa pesanan di PO {$order->number} (sisa {$line->outstanding()})."
+                );
+            }
+
+            if (bccomp((string) $item->unit_cost, (string) $line->unit_cost, 4) !== 0) {
+                throw new DomainException("Harga {$item->product->sku} berbeda dari Purchase Order {$order->number}.");
+            }
+
+            $line->forceFill(['qty_received' => bcadd((string) $line->qty_received, (string) $item->quantity, 3)])->save();
+        }
+
+        $complete = $orderItems->every(fn ($i) => bccomp($i->outstanding(), '0', 3) === 0);
+
+        $order->forceFill([
+            'status' => $complete ? PurchaseOrderStatus::Received : PurchaseOrderStatus::PartiallyReceived,
+            'completed_at' => $complete ? now() : null,
+        ])->save();
+
+        return $order;
     }
 }

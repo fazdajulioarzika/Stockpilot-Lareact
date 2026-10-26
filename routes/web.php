@@ -17,12 +17,23 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ValuationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\PurchaseOrderController;
 
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('purchase-orders', PurchaseOrderController::class)
+        ->parameters(['purchase-orders' => 'purchase_order']);
+
+    Route::prefix('purchase-orders/{purchase_order}')->name('purchase-orders.')->group(function () {
+        Route::post('submit', [PurchaseOrderController::class, 'submit'])->name('submit');
+        Route::post('approve', [PurchaseOrderController::class, 'approve'])->name('approve');
+        Route::post('cancel', [PurchaseOrderController::class, 'cancel'])->name('cancel');
+        Route::post('close', [PurchaseOrderController::class, 'close'])->name('close');
+        Route::post('receipts', [PurchaseOrderController::class, 'createReceipt'])->name('receipts');
+    });
 
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');

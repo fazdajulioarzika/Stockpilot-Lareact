@@ -15,6 +15,9 @@ use App\Models\Stocktake;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Enums\PurchaseOrderStatus;
+use App\Models\PurchaseOrder;
+use App\Models\Supplier;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\Process;
@@ -234,4 +237,58 @@ it('never lets a posting slip between the stocktake snapshot and the lock', func
             ->and(in_array($balance, [10.0, 15.0], true))->toBeTrue()
             ->and($stocktake->fresh()->status)->toBe(StocktakeStatus::Counting);
     }
+});
+function ccPurchaseOrder(object $w, string $qty): PurchaseOrder
+{
+    $supplier = Supplier::create(['name' => 'Pemasok Uji']);
+    $order = PurchaseOrder::create(['supplier_id' => $supplier->id, 'warehouse_id' => $w->wh->id, 'created_by' => $w->admin->id]);
+    $order->items()->create(['product_id' => $w->p1->id, 'quantity' => $qty, 'unit_cost' => '100']);
+    $order->forceFill(['status' => PurchaseOrderStatus::Approved])->save();
+
+    return $order;
+}
+
+function ccOrderReceipt(object $w, PurchaseOrder $order, string $qty): GoodsReceipt
+{
+    $receipt = GoodsReceipt::create([
+        'warehouse_id' => $w->wh->id,
+        'supplier_id' => $order->supplier_id,
+        'purchase_order_id' => $order->id,
+        'created_by' => $w->admin->id,
+    ]);
+    $receipt->items()->create(['product_id' => $w->p1->id, 'quantity' => $qty, 'unit_cost' => '100']);
+
+    return $receipt;
+}
+
+it('never receives more than the order even when two receipts race for the same lines', function () {
+    $w = ccWorld();
+    $order = ccPurchaseOrder($w, '10');
+    $a = ccOrderReceipt($w, $order, '6');
+    $b = ccOrderReceipt($w, $order, '6');
+
+    $results = collect(ccRun([['receipt', $a->id, $w->admin->id], ['receipt', $b->id, $w->admin->id]]));
+
+    expect($results->where('ok', true))->toHaveCount(1)
+        ->and($results->where('ok', false))->toHaveCount(1)
+        ->and($results->where('ok', false)->first()['error'])->toBe('DomainException')
+        ->and((float) $order->items()->first()->qty_received)->toBe(6.0)
+        ->and(ccBalance($w->wh, $w->p1))->toBe(6.0)
+        ->and($order->fresh()->status)->toBe(PurchaseOrderStatus::PartiallyReceived);
+});
+
+it('does not deadlock when a receipt is reversed while another receipt of the same order posts', function () {
+    $w = ccWorld();
+    $order = ccPurchaseOrder($w, '20');
+    $first = ccOrderReceipt($w, $order, '6');
+    $second = ccOrderReceipt($w, $order, '6');
+
+    app(PostGoodsReceipt::class)->execute($first, $w->admin);
+
+    $results = collect(ccRun([['reverse', $first->id, $w->admin->id], ['receipt', $second->id, $w->admin->id]]));
+
+    expect($results->where('ok', false)->all())->toBe([])
+        ->and((float) $order->items()->first()->qty_received)->toBe(6.0)
+        ->and(ccBalance($w->wh, $w->p1))->toBe(6.0)
+        ->and($order->fresh()->status)->toBe(PurchaseOrderStatus::PartiallyReceived);
 });

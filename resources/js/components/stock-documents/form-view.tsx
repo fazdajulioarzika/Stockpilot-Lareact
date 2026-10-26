@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-import { DocumentMeta, WarehouseOption } from "./types";
+import { DocumentMeta, formatQty, WarehouseOption } from "./types";
 
 type Line = { product_id: string; quantity: string; unit_cost: string };
 
@@ -44,13 +44,22 @@ type ExistingDocument = {
     items: { product_id: number; quantity: string; unit_cost?: string }[];
 };
 
+type LinkedOrder = {
+    id: number;
+    number: string;
+    items: { product_id: number; outstanding: string; unit_cost: string }[];
+};
+
 export type FormProps = {
     meta: DocumentMeta;
     document: ExistingDocument | null;
     warehouses: WarehouseOption[];
     products: ProductOption[];
     suppliers?: { id: number; name: string }[];
+    purchase_order?: LinkedOrder | null;
 };
+
+const emptyLine: Line = { product_id: "", quantity: "", unit_cost: "" };
 
 export default function FormView({
     meta,
@@ -58,6 +67,7 @@ export default function FormView({
     warehouses,
     products,
     suppliers = [],
+    purchase_order: order = null,
 }: FormProps) {
     const form = useForm<FormData>({
         warehouse_id: doc
@@ -75,7 +85,7 @@ export default function FormView({
                   quantity: String(Number(i.quantity)),
                   unit_cost: String(Number(i.unit_cost ?? 0)),
               }))
-            : [{ product_id: "", quantity: "", unit_cost: "" }],
+            : [{ ...emptyLine }],
     });
 
     const errors = form.errors as Record<string, string | undefined>;
@@ -83,6 +93,13 @@ export default function FormView({
         form.data.items.map((i) => i.product_id).filter(Boolean)
     );
     const productById = new Map(products.map((p) => [String(p.id), p]));
+    const orderItems = new Map(
+        (order?.items ?? []).map((i) => [String(i.product_id), i])
+    );
+    const productOptions = order
+        ? products.filter((p) => orderItems.has(String(p.id)))
+        : products;
+    const noWarehouse = warehouses.length === 0;
 
     function setLine(index: number, patch: Partial<Line>) {
         form.setData(
@@ -93,18 +110,14 @@ export default function FormView({
         );
     }
 
-    function addLine() {
-        form.setData("items", [
-            ...form.data.items,
-            { product_id: "", quantity: "", unit_cost: "" },
-        ]);
-    }
-
-    function removeLine(index: number) {
-        form.setData(
-            "items",
-            form.data.items.filter((_, i) => i !== index)
-        );
+    function chooseProduct(index: number, productId: string) {
+        // Harga produk di PO mengikuti PO dan tidak bisa diubah.
+        setLine(index, {
+            product_id: productId,
+            ...(order
+                ? { unit_cost: orderItems.get(productId)?.unit_cost ?? "" }
+                : {}),
+        });
     }
 
     function submit(e: FormEvent) {
@@ -117,8 +130,6 @@ export default function FormView({
         }
     }
 
-    const noWarehouse = warehouses.length === 0;
-
     return (
         <>
             <Head title={doc ? `Ubah ${doc.number}` : `Buat ${meta.title}`} />
@@ -130,6 +141,20 @@ export default function FormView({
                 <h1 className="text-xl font-semibold">
                     {doc ? `Ubah draft ${doc.number}` : `Buat ${meta.title}`}
                 </h1>
+
+                {order && (
+                    <p className="rounded-md border border-amber-500/50 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                        Draft ini berasal dari{" "}
+                        <Link
+                            href={`/purchase-orders/${order.id}`}
+                            className="font-medium underline underline-offset-4"
+                        >
+                            {order.number}
+                        </Link>
+                        . Gudang, supplier, dan harga mengikuti PO, dan jumlah
+                        tidak boleh melebihi sisa pesanan.
+                    </p>
+                )}
 
                 {noWarehouse && (
                     <p className="rounded-md border border-destructive/50 p-3 text-sm text-destructive">
@@ -146,6 +171,7 @@ export default function FormView({
                             onValueChange={(v) =>
                                 form.setData("warehouse_id", v)
                             }
+                            disabled={!!order}
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Pilih gudang" />
@@ -167,7 +193,7 @@ export default function FormView({
 
                     {meta.type === "receipt" ? (
                         <div className="grid gap-2">
-                            <Label>Supplier (opsional)</Label>
+                            <Label>Supplier {order ? "" : "(opsional)"}</Label>
                             <Select
                                 value={form.data.supplier_id || "none"}
                                 onValueChange={(v) =>
@@ -176,6 +202,7 @@ export default function FormView({
                                         v === "none" ? "" : v
                                     )
                                 }
+                                disabled={!!order}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih supplier" />
@@ -264,7 +291,12 @@ export default function FormView({
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={addLine}
+                            onClick={() =>
+                                form.setData("items", [
+                                    ...form.data.items,
+                                    { ...emptyLine },
+                                ])
+                            }
                         >
                             <Plus className="mr-1 size-4" /> Tambah item
                         </Button>
@@ -279,24 +311,25 @@ export default function FormView({
                     {form.data.items.map((line, index) => {
                         const unit = productById.get(line.product_id)?.unit
                             ?.symbol;
+                        const outstanding = orderItems.get(
+                            line.product_id
+                        )?.outstanding;
 
                         return (
                             <div key={index} className="grid gap-1">
-                                <div className="flex items-start gap-2">
-                                    <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-start gap-2">
+                                    <div className="min-w-56 flex-1">
                                         <Select
                                             value={line.product_id}
                                             onValueChange={(v) =>
-                                                setLine(index, {
-                                                    product_id: v,
-                                                })
+                                                chooseProduct(index, v)
                                             }
                                         >
                                             <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Pilih produk" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {products
+                                                {productOptions
                                                     .filter(
                                                         (p) =>
                                                             !chosen.has(
@@ -317,27 +350,38 @@ export default function FormView({
                                         </Select>
                                     </div>
 
-                                    <div className="flex w-40 items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            step="0.001"
-                                            inputMode="decimal"
-                                            placeholder="Jumlah"
-                                            aria-label={`Jumlah item ${
-                                                index + 1
-                                            }`}
-                                            value={line.quantity}
-                                            onChange={(e) =>
-                                                setLine(index, {
-                                                    quantity: e.target.value,
-                                                })
-                                            }
-                                        />
-                                        <span className="w-10 text-sm text-muted-foreground">
-                                            {unit ?? ""}
-                                        </span>
+                                    <div className="grid w-40 gap-1">
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                max={outstanding}
+                                                step="0.001"
+                                                inputMode="decimal"
+                                                placeholder="Jumlah"
+                                                aria-label={`Jumlah item ${
+                                                    index + 1
+                                                }`}
+                                                value={line.quantity}
+                                                onChange={(e) =>
+                                                    setLine(index, {
+                                                        quantity:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                            />
+                                            <span className="w-10 text-sm text-muted-foreground">
+                                                {unit ?? ""}
+                                            </span>
+                                        </div>
+                                        {outstanding !== undefined && (
+                                            <span className="text-xs text-muted-foreground">
+                                                Sisa pesanan{" "}
+                                                {formatQty(outstanding)}
+                                            </span>
+                                        )}
                                     </div>
+
                                     {meta.type === "receipt" && (
                                         <div className="grid w-44 gap-1">
                                             <Input
@@ -350,6 +394,7 @@ export default function FormView({
                                                     index + 1
                                                 }`}
                                                 value={line.unit_cost}
+                                                readOnly={!!order}
                                                 onChange={(e) =>
                                                     setLine(index, {
                                                         unit_cost:
@@ -375,13 +420,21 @@ export default function FormView({
                                                 )}
                                         </div>
                                     )}
+
                                     <Button
                                         type="button"
                                         variant="ghost"
                                         size="icon"
                                         aria-label={`Hapus item ${index + 1}`}
                                         disabled={form.data.items.length === 1}
-                                        onClick={() => removeLine(index)}
+                                        onClick={() =>
+                                            form.setData(
+                                                "items",
+                                                form.data.items.filter(
+                                                    (_, i) => i !== index
+                                                )
+                                            )
+                                        }
                                     >
                                         <Trash2 className="size-4" />
                                     </Button>

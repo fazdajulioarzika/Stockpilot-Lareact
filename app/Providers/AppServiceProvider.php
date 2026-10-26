@@ -17,6 +17,9 @@ use App\Policies\TransferPolicy;
 use App\Models\Stocktake;
 use App\Policies\StocktakePolicy;
 use App\Enums\Role;
+use App\Models\PurchaseOrder;
+use App\Policies\PurchaseOrderPolicy;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('view-audit-log', fn (User $user) => $user->hasRole(Role::Admin, Role::Manager));
         Gate::define('manage-users', fn (User $user) => $user->isAdmin());
         Gate::define('view-valuation', fn (User $user) => $user->hasRole(Role::Admin, Role::Manager));
+        Gate::policy(PurchaseOrder::class, PurchaseOrderPolicy::class);
     }
 
     /**

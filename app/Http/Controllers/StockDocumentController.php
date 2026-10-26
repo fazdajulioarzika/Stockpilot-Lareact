@@ -37,7 +37,7 @@ abstract class StockDocumentController extends Controller
         return [];
     }
 
-    protected function extraFormProps(): array
+    protected function extraFormProps(?Model $doc = null): array
     {
         return [];
     }
@@ -132,7 +132,7 @@ abstract class StockDocumentController extends Controller
                 ->with('unit:id,symbol')
                 ->orderBy('name')
                 ->get(['id', 'sku', 'name', 'unit_id']),
-            ...$this->extraFormProps(),
+            ...$this->extraFormProps($doc),
         ]);
     }
 

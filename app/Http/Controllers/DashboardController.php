@@ -12,6 +12,7 @@ use App\Models\StockMovement;
 use App\Models\Stocktake;
 use App\Models\StockTransfer;
 use App\Models\Warehouse;
+use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -100,11 +101,17 @@ class DashboardController extends Controller
 
         if ($user->hasRole(Role::Admin, Role::Manager)) {
             // Admin dan Manager memiliki akses semua gudang, jadi tidak perlu scope.
+            $add('PO menunggu approval', PurchaseOrder::where('status', 'submitted')->count(), '/purchase-orders?status=submitted');
             $add('Transfer menunggu approval', StockTransfer::where('status', TransferStatus::PendingApproval->value)->count(), '/transfers?status=pending_approval');
             $add('Opname menunggu approval', Stocktake::where('status', StocktakeStatus::PendingApproval->value)->count(), '/stocktakes?status=pending_approval');
         }
 
         if ($user->hasRole(Role::Admin, Role::WarehouseStaff)) {
+            $add(
+                'PO siap diterima',
+                $scoped(PurchaseOrder::query()->whereIn('status', ['approved', 'partially_received']), 'warehouse_id')->count(),
+                '/purchase-orders',
+            );
             $add(
                 'Transfer siap dikirim',
                 $scoped(StockTransfer::query()->where('status', TransferStatus::Approved->value), 'source_warehouse_id')->count(),

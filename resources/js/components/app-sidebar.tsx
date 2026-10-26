@@ -16,6 +16,7 @@ import {
     Warehouse,
     Coins,
     FileSpreadsheet,
+    ShoppingCart,
     type LucideIcon,
 } from "lucide-react";
 
@@ -89,6 +90,11 @@ const groups: Group[] = [
                 title: "Stock Opname",
                 href: "/stocktakes",
                 icon: ClipboardCheck,
+            },
+            {
+                title: "Purchase Order",
+                href: "/purchase-orders",
+                icon: ShoppingCart,
             },
         ],
     },

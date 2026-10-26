@@ -10,6 +10,7 @@ use App\Models\GoodsReceipt;
 use App\Models\StockIssue;
 use App\Models\Stocktake;
 use App\Models\User;
+use App\Actions\Inventory\ReverseStockDocument;
 
 require __DIR__ . '/../../vendor/autoload.php';
 
@@ -32,6 +33,7 @@ try {
         'receipt' => app(PostGoodsReceipt::class)->execute(GoodsReceipt::findOrFail((int) $id), $user),
         'issue' => app(PostStockIssue::class)->execute(StockIssue::findOrFail((int) $id), $user),
         'start_stocktake' => app(StartStocktake::class)->execute(Stocktake::findOrFail((int) $id), $user),
+        'reverse' => app(ReverseStockDocument::class)->execute(GoodsReceipt::findOrFail((int) $id), $user, 'Uji konkurensi'),
     };
 
     echo json_encode(['ok' => true]);
