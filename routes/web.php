@@ -15,12 +15,23 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ValuationController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ExportController;
 
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
+
+    Route::get('exports/inventory', [ExportController::class, 'inventory'])->name('exports.inventory');
+    Route::get('exports/stock-movements', [ExportController::class, 'movements'])->name('exports.movements');
+    Route::get('exports/valuation', [ExportController::class, 'valuation'])
+        ->middleware('can:view-valuation')
+        ->name('exports.valuation');
 
     Route::get('valuation', [ValuationController::class, 'index'])
         ->middleware('can:view-valuation')

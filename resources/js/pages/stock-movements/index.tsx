@@ -1,5 +1,5 @@
 import { Head, Link, router } from "@inertiajs/react";
-
+import { ExportButtons } from "@/components/export-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -177,6 +177,18 @@ export default function StockMovementsIndex({
                                 applyFilters({ to: e.target.value })
                             }
                             className="w-40"
+                        />
+                    </div>
+                    <div className="ml-auto">
+                        <ExportButtons
+                            path="/exports/stock-movements"
+                            params={{
+                                warehouse_id: filters.warehouse_id,
+                                product_id: filters.product_id,
+                                type: filters.type,
+                                from: filters.from,
+                                to: filters.to,
+                            }}
                         />
                     </div>
                 </div>

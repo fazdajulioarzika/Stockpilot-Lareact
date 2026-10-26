@@ -1,7 +1,7 @@
 import { Head, router } from "@inertiajs/react";
 import { AlertTriangle } from "lucide-react";
 import { useState } from "react";
-
+import { ExportButtons } from "@/components/export-buttons";
 import { Paginated } from "@/components/stock-documents/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -211,6 +211,16 @@ export default function ValuationIndex({
                             ))}
                         </SelectContent>
                     </Select>
+                    <div className="ml-auto">
+                        <ExportButtons
+                            path="/exports/valuation"
+                            params={{
+                                search: filters.search,
+                                warehouse_id: filters.warehouse_id,
+                                category_id: filters.category_id,
+                            }}
+                        />
+                    </div>
                 </div>
 
                 <div className="rounded-md border">

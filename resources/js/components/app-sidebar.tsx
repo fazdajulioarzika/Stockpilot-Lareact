@@ -15,6 +15,7 @@ import {
     Users,
     Warehouse,
     Coins,
+    FileSpreadsheet,
     type LucideIcon,
 } from "lucide-react";
 
@@ -67,6 +68,7 @@ const groups: Group[] = [
                 icon: Coins,
                 ability: "viewValuation",
             },
+            { title: "Laporan", href: "/reports", icon: FileSpreadsheet },
         ],
     },
     {

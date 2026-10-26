@@ -1,6 +1,6 @@
 import { Head, router } from "@inertiajs/react";
 import { useState } from "react";
-
+import { ExportButtons } from "@/components/export-buttons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -149,6 +149,17 @@ export default function InventoryIndex({
                             }
                         />
                         <Label htmlFor="low">Hanya stok rendah</Label>
+                    </div>
+                    <div className="ml-auto">
+                        <ExportButtons
+                            path="/exports/inventory"
+                            params={{
+                                search: filters.search,
+                                warehouse_id: filters.warehouse_id,
+                                category_id: filters.category_id,
+                                low: filters.low,
+                            }}
+                        />
                     </div>
                 </div>
 
