@@ -18,10 +18,9 @@ use App\Http\Controllers\ValuationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\PurchaseOrderController;
-
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::redirect('/', '/dashboard')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('purchase-orders', PurchaseOrderController::class)
