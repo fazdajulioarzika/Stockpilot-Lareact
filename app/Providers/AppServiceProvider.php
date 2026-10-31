@@ -19,6 +19,7 @@ use App\Policies\StocktakePolicy;
 use App\Enums\Role;
 use App\Models\PurchaseOrder;
 use App\Policies\PurchaseOrderPolicy;
+use Illuminate\Support\Facades\URL;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -36,6 +37,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->isProduction()) {
+            URL::forceScheme('https');
+        }
         Gate::define('manage-master-data', fn (User $user) => $user->isAdmin());
         Gate::policy(GoodsReceipt::class, InventoryDocumentPolicy::class);
         Gate::policy(StockIssue::class, InventoryDocumentPolicy::class);
